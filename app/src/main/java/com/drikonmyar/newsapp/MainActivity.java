@@ -7,8 +7,11 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.viewpager2.widget.ViewPager2;
 
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.messaging.FirebaseMessaging;
 
 import java.util.ArrayList;
@@ -18,6 +21,8 @@ public class MainActivity extends AppCompatActivity {
 
     private ViewPager2 newsViewPager;
     private NewsAdapter newsAdapter;
+    private List<String> newsTexts = new ArrayList<>();
+    private List<String> imageUrls = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,19 +34,8 @@ public class MainActivity extends AppCompatActivity {
         // Set orientation to vertical
         newsViewPager.setOrientation(ViewPager2.ORIENTATION_VERTICAL);
 
-        List<String> newsTexts = new ArrayList<>();
-        newsTexts.add("A bot-driven car is an autonomous vehicle that uses AI, sensors, and GPS to navigate without human input. It detects obstacles, interprets traffic signals, and makes real-time decisions using advanced algorithms and deep learning. Companies like Tesla and Waymo are developing self-driving technology to enhance safety and efficiency, shaping the future.");
-        newsTexts.add("A bot-created bot is an autonomous system that uses AI, algorithms, and data to develop new bots without human input. It analyzes patterns, optimizes code, and makes real-time improvements using machine learning and automation. Companies like OpenAI and DeepMind are advancing self-learning AI to enhance efficiency and innovation, shaping the future.");
-        newsTexts.add("A bot coding is an autonomous system that uses AI, algorithms, and data to write code without human input. It analyzes patterns, debugs errors, and makes the real-time improvements using machine learning and automation. Companies like OpenAI and DeepMind are advancing AI-driven coding to enhance efficiency.");
-
-        // Image URLs instead of resource IDs
-        List<String> imageUrls = new ArrayList<>();
-        imageUrls.add("https://file-examples.com/storage/fe21422a6d67aa28993b797/2017/10/file_example_JPG_100kB.jpg");
-        imageUrls.add("https://file-examples.com/storage/fe21422a6d67aa28993b797/2017/10/file_example_JPG_100kB.jpg");
-        imageUrls.add("https://file-examples.com/storage/fe21422a6d67aa28993b797/2017/10/file_example_JPG_100kB.jpg");
-
-        newsAdapter = new NewsAdapter(newsTexts.toArray(new String[0]), imageUrls.toArray(new String[0]));
-        newsViewPager.setAdapter(newsAdapter);
+        // Fetch data from Firebase Realtime Database
+        fetchDataFromFirebase();
 
         // Set custom page transformer for pro-level book-like animation
         newsViewPager.setPageTransformer(new ProVerticalBookPageTransformer());
@@ -58,12 +52,48 @@ public class MainActivity extends AppCompatActivity {
 
         // Messaging Token
         FirebaseMessaging.getInstance().getToken().addOnCompleteListener(task -> {
-            if(!task.isSuccessful()){
+            if (!task.isSuccessful()) {
                 Log.e("TokenDetails", "Token failed to receive!!");
                 return;
             }
             String token = task.getResult();
             Log.d("TOKEN", token);
+        });
+    }
+
+    private void fetchDataFromFirebase() {
+        // Get a reference to the Firebase Realtime Database
+        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("news");
+
+        // Fetch data from the "news" node
+        databaseReference.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                // Clear previous data
+                newsTexts.clear();
+                imageUrls.clear();
+
+                // Iterate through each news item
+                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                    String text = snapshot.child("text").getValue(String.class);
+                    String imageUrl = snapshot.child("imageUrl").getValue(String.class);
+
+                    // Add values to the lists
+                    if (text != null && imageUrl != null) {
+                        newsTexts.add(text);
+                        imageUrls.add(imageUrl);
+                    }
+                }
+
+                // Set the data to the adapter
+                newsAdapter = new NewsAdapter(newsTexts.toArray(new String[0]), imageUrls.toArray(new String[0]));
+                newsViewPager.setAdapter(newsAdapter);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                Log.e("Firebase", "Error fetching data: " + databaseError.getMessage());
+            }
         });
     }
 
