@@ -7,14 +7,15 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+import com.bumptech.glide.Glide;
 
 public class NewsAdapter extends RecyclerView.Adapter<NewsAdapter.NewsViewHolder> {
     private String[] newsTexts;
-    private int[] images;
+    private String[] imageUrls;
 
-    public NewsAdapter(String[] newsTexts, int[] images) {
+    public NewsAdapter(String[] newsTexts, String[] imageUrls) {
         this.newsTexts = newsTexts;
-        this.images = images;
+        this.imageUrls = imageUrls;
     }
 
     @NonNull
@@ -26,7 +27,13 @@ public class NewsAdapter extends RecyclerView.Adapter<NewsAdapter.NewsViewHolder
 
     @Override
     public void onBindViewHolder(@NonNull NewsViewHolder holder, int position) {
-        holder.newsImage.setImageResource(images[position]);
+        // Load image from URL using Glide
+        Glide.with(holder.newsImage.getContext())
+                .load(imageUrls[position])
+                .placeholder(R.drawable.botcoder)  // Optional: Placeholder image while loading
+                .error(R.drawable.botcoder)        // Optional: Error image
+                .into(holder.newsImage);
+
         holder.newsText.setText(newsTexts[position]);
     }
 

@@ -34,18 +34,19 @@ public class MainActivity extends AppCompatActivity {
         newsTexts.add("A bot-created bot is an autonomous system that uses AI, algorithms, and data to develop new bots without human input. It analyzes patterns, optimizes code, and makes real-time improvements using machine learning and automation. Companies like OpenAI and DeepMind are advancing self-learning AI to enhance efficiency and innovation, shaping the future.");
         newsTexts.add("A bot coding is an autonomous system that uses AI, algorithms, and data to write code without human input. It analyzes patterns, debugs errors, and makes the real-time improvements using machine learning and automation. Companies like OpenAI and DeepMind are advancing AI-driven coding to enhance efficiency.");
 
-        List<Integer> images = new ArrayList<>();
-        images.add(R.drawable.botdriver);
-        images.add(R.drawable.botmechanic);
-        images.add(R.drawable.botcoder);
+        // Image URLs instead of resource IDs
+        List<String> imageUrls = new ArrayList<>();
+        imageUrls.add("https://file-examples.com/storage/fe21422a6d67aa28993b797/2017/10/file_example_JPG_100kB.jpg");
+        imageUrls.add("https://file-examples.com/storage/fe21422a6d67aa28993b797/2017/10/file_example_JPG_100kB.jpg");
+        imageUrls.add("https://file-examples.com/storage/fe21422a6d67aa28993b797/2017/10/file_example_JPG_100kB.jpg");
 
-        newsAdapter = new NewsAdapter(newsTexts.toArray(new String[0]), images.stream().mapToInt(i -> i).toArray());
+        newsAdapter = new NewsAdapter(newsTexts.toArray(new String[0]), imageUrls.toArray(new String[0]));
         newsViewPager.setAdapter(newsAdapter);
 
         // Set custom page transformer for pro-level book-like animation
         newsViewPager.setPageTransformer(new ProVerticalBookPageTransformer());
 
-        //Subscribe to Message
+        // Subscribe to Firebase Messaging
         FirebaseMessaging.getInstance().subscribeToTopic("TestMessage")
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
@@ -55,17 +56,14 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
 
-        //Messaging
-        FirebaseMessaging.getInstance().getToken().addOnCompleteListener(new OnCompleteListener<String>() {
-            @Override
-            public void onComplete(@NonNull Task<String> task) {
-                if(!task.isSuccessful()){
-                    Log.e("TokenDetails", "Token failed to receive!!");
-                    return;
-                }
-                String token = task.getResult();
-                Log.d("TOKEN", token);
+        // Messaging Token
+        FirebaseMessaging.getInstance().getToken().addOnCompleteListener(task -> {
+            if(!task.isSuccessful()){
+                Log.e("TokenDetails", "Token failed to receive!!");
+                return;
             }
+            String token = task.getResult();
+            Log.d("TOKEN", token);
         });
     }
 
@@ -115,5 +113,4 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
-
 }
