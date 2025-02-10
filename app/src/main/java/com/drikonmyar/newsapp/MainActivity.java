@@ -1,10 +1,16 @@
 package com.drikonmyar.newsapp;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.viewpager2.widget.ViewPager2;
+
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.messaging.FirebaseMessaging;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -38,6 +44,29 @@ public class MainActivity extends AppCompatActivity {
 
         // Set custom page transformer for pro-level book-like animation
         newsViewPager.setPageTransformer(new ProVerticalBookPageTransformer());
+
+        //Subscribe to Message
+        FirebaseMessaging.getInstance().subscribeToTopic("TestMessage")
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        Log.d("Firebase", "Successfully subscribed to TestMessage topic");
+                    } else {
+                        Log.e("Firebase", "Subscription to TestMessage failed", task.getException());
+                    }
+                });
+
+        //Messaging
+        FirebaseMessaging.getInstance().getToken().addOnCompleteListener(new OnCompleteListener<String>() {
+            @Override
+            public void onComplete(@NonNull Task<String> task) {
+                if(!task.isSuccessful()){
+                    Log.e("TokenDetails", "Token failed to receive!!");
+                    return;
+                }
+                String token = task.getResult();
+                Log.d("TOKEN", token);
+            }
+        });
     }
 
     private class ProVerticalBookPageTransformer implements ViewPager2.PageTransformer {
